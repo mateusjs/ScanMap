@@ -1,4 +1,3 @@
-# coding: utf-8
 import ipaddress as ip
 import pandas as pd
 import networkx as nx
@@ -19,6 +18,7 @@ grafo = {}
 addres = 0
 mascara = 0
 delay = 0
+<<<<<<< HEAD
 log_out = open("out.txt", "w")
 
 
@@ -33,6 +33,35 @@ def scanMap():
 
 master = Tk()
 master.geometry("300x100")
+=======
+
+
+def scanMap():
+    addres = e1.get()
+    mascara = e2.get()
+    delay = float(e3.get())
+    for end in ip.IPv4Network(addres + '/' + mascara):
+        end = str(end)
+
+        if Ping.ping(end) != -1:
+            ms = latency.verbose_ping(end, delay, 1)
+            print("\nIP %s acessivel    latencia = %s" % (end, ms))
+            print('\nVerificando portas abertas do ip: %s' % end)
+
+            ports = scan_ports(end, .1)
+            ip_available.append(end)
+            list_ports.append(ports)
+            latencys.append(ms)
+            ip_cache[end] = {'latency': ms, 'ports': ports}
+
+        else:
+            print("IP %s não funciona\n" % end)
+    print(ip_cache)
+    return
+    # grafo[addres] = {ip_cache}
+
+
+master = Tk()
 master.title("Trabalho de Redes")
 Label(master, text="Endereço da Sub Rede").grid(row=0)
 Label(master, text="Máscara").grid(row=1)
@@ -77,3 +106,4 @@ plt.show()
 with open("reachable.txt", "w") as file:
     pprint(ip_cache, stream=file)
 log_out.close()
+
