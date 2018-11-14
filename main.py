@@ -56,23 +56,26 @@ for end in ip.IPv4Network(addres + '/' + mascara):
 
     if Ping.ping(end) != -1:
         ms = latency.verbose_ping(end, delay, 1)
-        # print("\nIP %s acessivel    latencia = %s" % (end, ms))
+        print("\nIP %s acessivel    latencia = %s" % (end, ms))
         # print('\nVerificando portas abertas do ip: %s' % end)
-
+        print(ports)
+        ports.clear()
         ports = scan_ports(end, .1)
         ip_available.append(end)
         list_ports.append(ports)
         latencys.append(ms)
         ip_cache[end] = {'latency': ms, 'ports': ports}
+        print(ports)
     else:
+        print("IP %s não acessivel" % end)
         with open("unreachable.txt", "a+") as file:
-            file.write("IP: %s is unreachable")
+            file.write("IP: %s is unreachable\n" % end)
 
 data_frame = pd.DataFrame({'from': [addres] * len(ip_cache.keys()), 'to': [*ip_cache]})
 G = nx.from_pandas_edgelist(data_frame, 'from', 'to')
 nx.draw(G, with_labels=True)
 plt.show()
-
+print(ip_cache)
 with open("reachable.txt", "w") as file:
     pprint(ip_cache, stream=file)
 
