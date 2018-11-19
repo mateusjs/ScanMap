@@ -2,6 +2,8 @@ import ipaddress as ip
 import pandas as pd
 import networkx as nx
 import matplotlib.pyplot as plt
+import sys
+import socket
 from pprint import pprint
 from ping import Ping
 from ports import scan_ports
@@ -14,6 +16,7 @@ ip_available = []
 latencys = []
 ports = []
 ip_cache = {}
+ip_dict = {}
 grafo = {}
 addres = 0
 mascara = 0
@@ -27,6 +30,17 @@ def scanMap():
     addres = e1.get()
     mascara = e2.get()
     delay = float(e3.get())
+
+
+def graph(addres, ip_cache):
+    global file
+    data_frame = pd.DataFrame({'from': [addres] * len(ip_cache.keys()), 'to': [*ip_cache]})
+    G = nx.from_pandas_edgelist(data_frame, 'from', 'to')
+    nx.draw(G, with_labels=True)
+    plt.show()
+
+    with open("reachable.txt", "w") as file:
+        pprint(ip_cache, stream=file)
 
 
 master = Tk()
@@ -49,30 +63,39 @@ Button(master, text='OK', command=scanMap).grid(row=3, column=1, sticky=W, pady=
 
 mainloop()
 
-for end in ip.IPv4Network(addres + '/' + mascara):
-    end = str(end)
-    if addres == end:
-        continue
+if mascara:
+    for end in ip.IPv4Network(addres + '/' + mascara):
+        end = str(end)
+        if addres == end:
+            continue
 
-    if Ping.ping(end) != -1:
-        ms = latency.verbose_ping(end, delay, 1)
-        # print("\nIP %s acessivel    latencia = %s" % (end, ms))
-        # print('\nVerificando portas abertas do ip: %s' % end)
+        if Ping.ping(end) != -1:
+            ms = latency.verbose_ping(end, delay, 1)
+            ms = str(ms) + ' ms'
+            print("\nIP %s acessivel    latencia = %s" % (end, ms))
+            ports.clear()
+            ports = scan_ports(end, .1)
+            ip_cache[end] = {'latency': ms, 'ports': ports[:]}
+            graph(addres, ip_cache)
+            with open("sub_network_reachable.txt", "w") as file:
+                pprint(ip_dict, stream=file)
+        else:
+            print("IP %s não acessivel" % end)
+            with open("unreachable.txt", "a+") as file:
+                file.write("IP: %s is unreachable\n" % end)
 
-        ports = scan_ports(end, .1)
-        ip_available.append(end)
-        list_ports.append(ports)
-        latencys.append(ms)
-        ip_cache[end] = {'latency': ms, 'ports': ports}
+
+else:
+    ip_teste = str(addres)
+    ip_address = socket.gethostbyname(ip_teste)
+    # ip_address = "".join(aux[2])
+    print(ip_address)
+    if Ping.ping(ip_address) != -1:
+        ms = latency.verbose_ping(ip_address, delay, 1)
+        ms = str(ms) + ' ms'
+        ports = scan_ports(ip_address, 0.1)
+        ip_dict[ip_address] = {'latency': ms, 'ports': ports}
+        with open("direct_reachable.txt", "w") as file:
+            pprint(ip_dict, stream=file)
     else:
-        with open("unreachable.txt", "a+") as file:
-            file.write("IP: %s is unreachable")
-
-data_frame = pd.DataFrame({'from': [addres] * len(ip_cache.keys()), 'to': [*ip_cache]})
-G = nx.from_pandas_edgelist(data_frame, 'from', 'to')
-nx.draw(G, with_labels=True)
-plt.show()
-
-with open("reachable.txt", "w") as file:
-    pprint(ip_cache, stream=file)
-
+        print("Ip %s não acessivel" % ip_address)
