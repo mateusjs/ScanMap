@@ -76,7 +76,7 @@ if mascara:
             ports.clear()
             ports = scan_ports(end, .1)
             ip_cache[end] = {'latency': ms, 'ports': ports[:]}
-            graph(addres, ip_cache)
+            graph(socket.gethostbyname(socket.gethostname()), ip_cache)
             with open("sub_network_reachable.txt", "w") as file:
                 pprint(ip_dict, stream=file)
         else:
