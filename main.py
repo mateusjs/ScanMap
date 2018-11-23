@@ -76,7 +76,6 @@ if mascara:
             ports.clear()
             ports = scan_ports(end, .1)
             ip_cache[end] = {'latency': ms, 'ports': ports[:]}
-            graph(socket.gethostbyname(socket.gethostname()), ip_cache)
             with open("sub_network_reachable.txt", "w") as file:
                 pprint(ip_dict, stream=file)
         else:
@@ -84,6 +83,7 @@ if mascara:
             with open("unreachable.txt", "a+") as file:
                 file.write("IP: %s is unreachable\n" % end)
 
+    graph(socket.gethostbyname(socket.gethostname()), ip_cache)
 
 else:
     ip_teste = str(addres)
