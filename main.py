@@ -1,8 +1,8 @@
 import ipaddress as ip
-import pandas as pd
 import networkx as nx
 import matplotlib.pyplot as plt
-import sys
+import time
+import pandas as pd
 import socket
 from pprint import pprint
 from ping import Ping
@@ -39,7 +39,7 @@ def graph(addres, ip_cache):
     nx.draw(G, with_labels=True)
     plt.show()
 
-    with open("reachable.txt", "w") as file:
+    with open("reachable.txt", "w+") as file:
         pprint(ip_cache, stream=file)
 
 
@@ -63,12 +63,15 @@ Button(master, text='OK', command=scanMap).grid(row=3, column=1, sticky=W, pady=
 
 mainloop()
 
+
 if mascara:
-    for end in ip.IPv4Network(addres + '/' + mascara):
+    start_time = time.time()
+    for index, end in enumerate(ip.IPv4Network(addres + '/' + mascara)):
         end = str(end)
         if addres == end:
             continue
-
+        if index == 0 or index == 2 ** (32 - int(mascara)) - 1:
+            continue
         if Ping.ping(end) != -1:
             ms = latency.verbose_ping(end, delay, 1)
             ms = str(ms) + ' ms'
@@ -76,26 +79,27 @@ if mascara:
             ports.clear()
             ports = scan_ports(end, .1)
             ip_cache[end] = {'latency': ms, 'ports': ports[:]}
-            graph(addres, ip_cache)
-            with open("sub_network_reachable.txt", "w") as file:
+            with open("sub_network_reachable.txt", "a+") as file:
                 pprint(ip_dict, stream=file)
         else:
             print("IP %s não acessivel" % end)
             with open("unreachable.txt", "a+") as file:
                 file.write("IP: %s is unreachable\n" % end)
-
+    print("--- %s seconds ---" % (time.time() - start_time))
+    graph(socket.gethostbyname(socket.gethostname()), ip_cache)
 
 else:
     ip_teste = str(addres)
     ip_address = socket.gethostbyname(ip_teste)
     # ip_address = "".join(aux[2])
-    print(ip_address)
+
     if Ping.ping(ip_address) != -1:
+        print(ip_address, ' acessível')
         ms = latency.verbose_ping(ip_address, delay, 1)
         ms = str(ms) + ' ms'
         ports = scan_ports(ip_address, 0.1)
         ip_dict[ip_address] = {'latency': ms, 'ports': ports}
-        with open("direct_reachable.txt", "w") as file:
+        with open("direct_reachable.txt", "a+") as file:
             pprint(ip_dict, stream=file)
     else:
         print("Ip %s não acessivel" % ip_address)
